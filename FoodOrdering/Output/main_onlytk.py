@@ -1,0 +1,379 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+from PIL import Image, ImageTk
+import qrcode
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formataddr
+from tkinter import simpledialog
+
+# UPI Details (mock for the example)
+upi_id = '9545731750@ptyes'
+rec_name = 'BINARYRESTO20'
+
+# Mock Menu Data
+menu = {
+    "Starters": [
+        {"name": "Samosa", "price": 10, "img": "Images\menu\samosa.jpg", "desc": "A spicy potato filling encased in a crispy pastry", "spice": "High"},
+        {"name": "Paneer Pakora", "price": 80, "img": "Images\menu\paneer_pakora.jpg", "desc": "Fried cottage cheese fritters served with mint chutney", "spice": "Medium"},
+        {"name": "Spring Rolls", "price": 70, "img": "Images\menu\spring_rolls.jpg", "desc": "Crispy rolls filled with mixed vegetables, served with sauce", "spice": "Medium"},
+        {"name": "Vegetable Manchurian", "price": 100, "img": "Images\menu\Veg_manchurian.jpg", "desc": "Deep-fried vegetable balls in a spicy Manchurian sauce", "spice": "High"},
+        {"name": "Aloo Tikki", "price": 60, "img": "Images\menu\Aloo_tikki.jpg", "desc": "Spicy potato patties served with tamarind chutney", "spice": "Medium"},
+        {"name": "Chilli Paneer", "price": 120, "img": "Images\menu\chilli_paneer.jpg", "desc": "Paneer cubes tossed in a spicy sauce with capsicum and onions", "spice": "High"}
+    ],
+    "Main Course": [
+        {"name": "Chana Masala", "price": 110, "img": "Images\menu\chana_masala.jpg", "desc": "Spiced chickpeas cooked in a tangy tomato gravy", "spice": "Medium"},
+        {"name": "Aloo Gobi", "price": 100, "img": "Images\menu\Aloo_gobi.jpg", "desc": "Potatoes and cauliflower cooked with spices", "spice": "Medium"},
+        {"name": "Baingan Bharta", "price": 120, "img": "Images\menu\Baingan_bharta.jpg", "desc": "Smoky mashed eggplant cooked with onions and spices", "spice": "Medium"},
+        {"name": "Mixed Vegetable Curry", "price": 130, "img": "Images\menu\mix_veg.jpg", "desc": "Assorted vegetables cooked in a spiced gravy", "spice": "Medium"},
+        {"name": "Paneer Butter Masala", "price": 180, "img": "Images\menu\paneer_butter_masala.jpg", "desc": "Cottage cheese in a rich, creamy tomato gravy", "spice": "Low"},
+        {"name": "Kadai Paneer", "price": 170, "img": "Images\menu\kadai_paneer.jpg", "desc": "Paneer cubes cooked with bell peppers and spices", "spice": "Medium"},
+        {"name": "Palak Paneer", "price": 150, "img": "Images\menu\palak_paneer.jpg", "desc": "Cottage cheese cubes simmered in creamy spinach gravy", "spice": "Low"},
+        {"name": "Dal Makhani", "price": 120, "img": "Images\menu\dal_makhani.jpg", "desc": "Creamy black lentils cooked with butter and spices", "spice": "Low"},
+        {"name": "Veg Pulao", "price": 100, "img": "Images\menu\Veg_pulao.jpg", "desc": "Aromatic rice cooked with seasonal vegetables and mild spices", "spice": "Low"},
+        {"name": "Vegetable Biryani", "price": 200, "img": "Images\menu\Veg_biriyani.jpg", "desc": "Fragrant basmati rice cooked with mixed vegetables and spices", "spice": "Medium"},
+        {"name": "Jeera Rice", "price": 60, "img": "Images\menu\jeera_rice.jpg", "desc": "Basmati rice tempered with cumin seeds", "spice": "None"},
+        {"name": "Butter Naan", "price": 40, "img": "Images\menu\Butter_naan.jpg", "desc": "Soft Indian flatbread with a generous brush of butter", "spice": "None"},
+        {"name": "Tandoori Roti", "price": 30, "img": "Images\menu\Tandoor_roti.jpg", "desc": "Whole wheat flatbread cooked in a tandoor", "spice": "None"},
+        {"name": "Roti (Plain)", "price": 25, "img": "Images\menu\Roti.jpg", "desc": "Soft Indian flatbread made with whole wheat flour", "spice": "None"},
+        {"name": "Methi Thepla", "price": 50, "img": "Images\menu\methi_thepla.jpg", "desc": "Spiced flatbread made with fenugreek leaves", "spice": "Medium"}
+        
+    ],
+    "Desserts": [
+        {"name": "Gulab Jamun", "price": 60, "img": "Images\menu\gulab_jamun.jpg", "desc": "Soft, syrup-soaked dumplings made from milk solids", "spice": "None"},
+        {"name": "Ras Malai", "price": 80, "img": "Images\menu\Rasmalai.jpg", "desc": "Soft paneer dumplings soaked in saffron-flavored milk", "spice": "None"},
+        {"name": "Kheer", "price": 70, "img": "Images\menu\kheer.jpg", "desc": "Rice pudding made with milk, sugar, and cardamom", "spice": "None"},
+        {"name": "Jalebi", "price": 60, "img": "Images\menu\jalebi.jpg", "desc": "Crispy, sweet spiral-shaped dessert soaked in sugar syrup", "spice": "None"},
+        {"name": "Ice Cream", "price": 50, "img": "Images\menu\ice_cream.jpg", "desc": "Classic vanilla-flavored ice cream", "spice": "None"}
+    ]
+}
+
+class FoodOrderingApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Food Ordering App")
+        self.geometry("1200x1000")
+
+        self.selected_items = []
+        self.total_price = 0
+
+        # Frame for user details input
+        self.details_frame = tk.Frame(self)
+        self.details_frame.pack(pady=20)
+
+        # Labels and Entries for user details
+        self.name_label = tk.Label(self.details_frame, text="Name:")
+        self.name_label.grid(row=0, column=0)
+        self.name_entry = tk.Entry(self.details_frame)
+        self.name_entry.grid(row=0, column=1)
+
+        self.phone_label = tk.Label(self.details_frame, text="Phone Number:")
+        self.phone_label.grid(row=1, column=0)
+        self.phone_entry = tk.Entry(self.details_frame)
+        self.phone_entry.grid(row=1, column=1)
+
+        self.seats_label = tk.Label(self.details_frame, text="Number of Seats:")
+        self.seats_label.grid(row=2, column=0)
+        self.seats_entry = tk.Entry(self.details_frame)
+        self.seats_entry.grid(row=2, column=1)
+
+        # Modify the Special Occasion Entry to a Dropdown List if "Yes" is selected
+        self.occasion_label = tk.Label(self.details_frame, text="Is there a Special Occasion?")
+        self.occasion_label.grid(row=3, column=0)
+
+        self.occasion_var = tk.StringVar(self.details_frame)
+        self.occasion_dropdown = ttk.Combobox(self.details_frame, textvariable=self.occasion_var, state="readonly")
+        self.occasion_dropdown['values'] = ["No", "Yes"]
+        # self.occasion_dropdown.current(0)
+        self.occasion_dropdown.grid(row=3, column=1)
+
+        # Bind the dropdown selection to trigger occasion type selection if "Yes"
+        self.occasion_dropdown.bind("<<ComboboxSelected>>", self.show_occasion_type)
+
+    # Define show_occasion_type method inside your class
+    def show_occasion_type(self, event):
+        if self.occasion_var.get() == "Yes":
+            # Create a new dropdown for selecting the occasion type
+            self.occasion_type_label = tk.Label(self.details_frame, text="Select Occasion:")
+            self.occasion_type_label.grid(row=4, column=0)
+            
+            self.occasion_type_var = tk.StringVar(self.details_frame)
+            self.occasion_type_dropdown = ttk.Combobox(self.details_frame, textvariable=self.occasion_type_var, state="readonly")
+            self.occasion_type_dropdown['values'] = ["Birthday", "Anniversary", "Graduation", "Promotion", "Other"]
+            self.occasion_type_dropdown.grid(row=4, column=1)
+
+            # Bind to show a congratulatory message after the occasion type is selected
+            self.occasion_type_dropdown.bind("<<ComboboxSelected>>", self.display_congratulatory_message)
+        else:
+            # Remove occasion type dropdown and label if "No" is selected
+            # if hasattr(self, 'occasion_type_label'):
+            #     self.occasion_type_label.grid_forget()
+            #     self.occasion_type_dropdown.grid_forget()
+            self.submit_button = tk.Button(self.details_frame, text="Submit", command=self.submit_details)
+            self.submit_button.grid(row=5, column=1, padx=10, pady=10)
+
+
+    # Define display_congratulatory_message method inside your class
+    def display_congratulatory_message(self, event):
+        selected_occasion = self.occasion_type_var.get()
+        if selected_occasion:
+            messagebox.showinfo("Congratulations!", f"Congratulations on your {selected_occasion}!")
+
+        # Submit button to trigger the menu display
+        self.submit_button = tk.Button(self.details_frame, text="Submit", command=self.submit_details)
+        self.submit_button.grid(row=5, column=1, padx=10, pady=10)
+
+    def submit_details(self):
+        # Store user details
+        self.user_name = self.name_entry.get()
+        self.user_phone = self.phone_entry.get()
+        self.user_seats = self.seats_entry.get()
+
+        # Validate that all fields are filled
+        if not (self.user_name and self.user_phone and self.user_seats):
+            messagebox.showerror("Error", "Please fill in all the details.")
+            return
+
+        # Remove details frame and display the menu
+        self.details_frame.pack_forget()
+        self.show_menu()
+
+    def show_menu(self):
+        # Create a frame for the main content (Menu)
+        main_frame = tk.Frame(self)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create a Canvas widget for the menu and add scrolling
+        self.canvas = tk.Canvas(main_frame)
+        self.scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        # Configure the scrollbar and canvas (scrolling only for the menu part)
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        # Create Notebook for menu categories (inside the scrollable frame)
+        self.notebook = ttk.Notebook(self.scrollable_frame)
+        self.notebook.pack(pady=10, expand=True)
+
+        for category, items in menu.items():
+            self.create_menu_tab(category, items)
+
+        # Bill section
+        self.bill_frame = tk.Frame(self)
+        self.bill_frame.pack(pady=20)
+        self.bill_label = tk.Label(self.bill_frame, text="Bill Preview", font=('Arial', 16, 'bold'))
+        self.bill_label.pack()
+
+        self.bill_text = tk.Text(self.bill_frame, height=10, width=50, state='disabled')
+        self.bill_text.pack()
+
+        # End Meal button
+        self.end_meal_button = tk.Button(self, text="End Meal", command=self.end_meal)
+        self.end_meal_button.pack(pady=10)
+
+        # Pay button (initially hidden)
+        self.pay_button = tk.Button(self, text="Pay & Finish", command=self.generate_receipt)
+        self.pay_button.pack(pady=10)
+        self.pay_button.pack_forget()  # Hide initially
+
+    def create_menu_tab(self, category, items):
+        frame = tk.Frame(self.notebook)
+        self.notebook.add(frame, text=category)
+
+        for item in items:
+            self.create_menu_item(frame, item)
+
+    def create_menu_item(self, frame, item):
+        item_frame = tk.Frame(frame)
+        item_frame.pack(pady=10)
+
+        # Display image
+        img = Image.open(item['img'])
+        img = img.resize((100, 100), Image.LANCZOS)
+        img = ImageTk.PhotoImage(img)
+
+        img_label = tk.Label(item_frame, image=img)
+        img_label.image = img
+        img_label.pack(side="left")
+
+        # Description
+        desc_frame = tk.Frame(item_frame)
+        desc_frame.pack(side="left", padx=20)
+
+        name_label = tk.Label(desc_frame, text=item['name'], font=('Arial', 14))
+        name_label.pack(anchor='w')
+
+        desc_label = tk.Label(desc_frame, text=item['desc'])
+        desc_label.pack(anchor='w')
+
+        spice_label = tk.Label(desc_frame, text=f"Spice Level: {item['spice']}")
+        spice_label.pack(anchor='w')
+
+        # Add to order button
+        price_label = tk.Label(desc_frame, text=f"Price: ₹{item['price']}")
+        price_label.pack(anchor='w')
+
+        add_button = tk.Button(desc_frame, text="Add to Order", command=lambda: self.add_to_order(item))
+        add_button.pack(pady=5)
+
+    def add_to_order(self, item):
+        self.selected_items.append(item)
+        self.update_bill()
+
+    def update_bill(self):
+        self.total_price = sum([item['price'] for item in self.selected_items])
+
+        self.bill_text.config(state='normal')
+        self.bill_text.delete('1.0', tk.END)
+        for item in self.selected_items:
+            self.bill_text.insert(tk.END, f"{item['name']} - ₹{item['price']}\n")
+        self.bill_text.insert(tk.END, f"\nTotal: ₹{self.total_price}")
+        self.bill_text.config(state='disabled')
+
+    def end_meal(self):
+        # Show confirmation message to end the meal
+        if self.selected_items:
+            confirm = messagebox.askyesno("End Meal", "Are you sure you want to end your meal?")
+            if confirm:
+                # Make the Pay button visible after confirmation
+                self.pay_button.pack()  # Ensure it's packed (made visible)
+
+        else:
+            messagebox.showerror("Error", "You haven't ordered anything yet!")
+
+    def generate_receipt(self):
+        # Ask for email/phone to send receipt
+        self.user_email = simpledialog.askstring("Enter your email: ","Enter your email: ")
+
+        if self.user_email:
+            # Generate receipt
+            self.receipt_details = "\n".join([f"{item['name']} - ₹{item['price']}" for item in self.selected_items])
+            self.receipt_details += f"\n\nTotal: ₹{self.total_price}"
+
+            with open("receipt.txt", "w") as file:
+                file.write(self.receipt_details)
+
+            self.send_email(self.user_email, self.receipt_details)
+
+            # Show QR code for UPI payment
+            self.show_qr_and_acknowledge_payment()
+
+        else:
+            messagebox.showerror("Error", "Please provide valid contact info.")
+
+    def show_qr_and_acknowledge_payment(self):
+        # Generate UPI QR code
+        upi_url = f'upi://pay?pa={upi_id}&pn={rec_name}&am={self.total_price}'
+        qr = qrcode.make(upi_url)
+        qr.save("upi_qr.png")
+
+        # Display QR code window
+        qr_window = tk.Toplevel()
+        qr_window.title("Scan to Pay")
+        qr_window.geometry("300x400")
+
+        qr_img = Image.open("upi_qr.png")
+        qr_img = qr_img.resize((250, 250), Image.LANCZOS)
+        qr_img = ImageTk.PhotoImage(qr_img)
+
+        qr_label = tk.Label(qr_window, image=qr_img)
+        qr_label.image = qr_img
+        qr_label.pack(pady=10)
+
+        instruction_label = tk.Label(qr_window, text="Scan the QR code to make the payment")
+        instruction_label.pack(pady=10)
+
+        # Button to simulate successful payment acknowledgment
+        pay_button = tk.Button(qr_window, text="Confirm Payment", command=lambda: self.acknowledge_payment(qr_window))
+        pay_button.pack(pady=10)
+
+    # def acknowledge_payment(self, qr_window):
+    #     qr_window.destroy()
+    #     messagebox.showinfo("Payment Successful", "Thank you for your payment!")
+    #     self.get_review()
+
+    def acknowledge_payment(self, qr_window):
+        qr_window.destroy()
+        messagebox.showinfo("Payment Successful", "Thank you for your payment!")
+        self.get_review()
+        
+        # After the review is submitted, change the title and message of the main window
+        self.title("Hope you enjoyed the service! Come back again")
+        self.bill_label.config(text="Hope you enjoyed the service! Come back again")
+
+    def send_email(self, email, content):
+        # Mock email sending
+        email_sender = 'sampagaonkar.parivita@gmail.com'
+        email_sender_pswd = 'fnip ajnt ldnn qfdz'
+        email_receiver = self.user_email
+
+        subject = 'Food Reciept'
+
+        msg = MIMEText(self.receipt_details)
+        msg['To'] = formataddr(('Recipient', self.user_email))
+        msg['From'] = formataddr(('Binary Resto', 'author@example.com'))
+        msg['Subject'] = 'Reciept'
+
+        connection = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        connection.ehlo()
+        connection.login(email_sender, email_sender_pswd)
+        connection.sendmail(msg['From'], email_receiver, msg.as_string())
+        connection.close()
+        print(f"Sending email to {email} with content:\n{content}")
+        messagebox.showinfo("Email", f"Receipt sent to {email}")
+
+    def send_sms(self, phone_number, content):
+        # Mock sending SMS
+        print(f"Sending SMS to {phone_number} with content:\n{content}")
+
+    def get_review(self):
+        # Get review from user
+        review_window = tk.Toplevel()
+        review_window.title("Leave a Review")
+        review_window.geometry("300x400")
+
+        review_label = tk.Label(review_window, text="Please leave a review")
+        review_label.pack(pady=10)
+
+        stars_label = tk.Label(review_window, text="Rating (1-5 stars):")
+        stars_label.pack(pady=5)
+
+        stars = ttk.Combobox(review_window, values=["1", "2", "3", "4", "5"], state='readonly')
+        stars.pack(pady=5)
+
+        review_text = tk.Text(review_window, height=5, width=30)
+        review_text.pack(pady=10)
+
+        # Modify the submit button to display thank you message and destroy the app
+        submit_button = tk.Button(review_window, text="Submit", command=lambda: [self.save_review(stars.get(), review_text.get("1.0", tk.END)), review_window.destroy(), self.show_thank_you()])
+        submit_button.pack()
+
+    def save_review(self, rating, comment):
+        # Save review (mock implementation)
+        print(f"Rating: {rating}, Comment: {comment}")
+
+    def show_thank_you(self):
+        # Create a thank you message window
+        thank_you_window = tk.Toplevel()
+        thank_you_window.title("Thank You!")
+        thank_you_window.geometry("300x150")
+
+        thank_you_label = tk.Label(thank_you_window, text="Thank you for your review!\nWe hope to see you again soon!", font=('Arial', 14), pady=20)
+        thank_you_label.pack()
+
+        # Schedule to close both the thank you window and the main application after 3 seconds
+        thank_you_window.after(1000, lambda: [thank_you_window.destroy(), self.destroy()])
+
+if __name__ == "__main__":
+    app = FoodOrderingApp()
+    app.mainloop()
