@@ -211,3 +211,77 @@ def clear_frame():
 # Start the application
 personal_details()
 root.mainloop()
+
+# from tkinter import messagebox, simpledialog
+# from PIL import Image, ImageTk
+# import qrcode
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.utils import formataddr
+
+# def generate_receipt(self):
+#         self.user_email = simpledialog.askstring("Enter your email: ","Enter your email: ")
+
+#         if self.user_email:
+#             self.receipt_details = "\n".join([f"{item['name']} - ₹{item['price']}" for item in self.selected_items])
+#             self.receipt_details += f"\n\nTotal: ₹{self.total_price}"
+
+#             with open("receipt.txt", "w") as file:
+#                 file.write(self.receipt_details)
+
+#             self.send_email(self.user_email, self.receipt_details)
+
+#             self.show_qr_and_acknowledge_payment()
+#         else:
+#             messagebox.showerror("Error", "Please provide valid contact info.")
+
+#     def show_qr_and_acknowledge_payment(self):
+#         upi_url = f'upi://pay?pa={upi_id}&pn={rec_name}&am={self.total_price}'
+#         qr = qrcode.make(upi_url)
+#         qr.save("upi_qr.png")
+
+#         qr_window = ttk.Toplevel()
+#         qr_window.title("Scan to Pay")
+#         qr_window.geometry("400x400")
+
+#         qr_img = Image.open("upi_qr.png")
+#         qr_img = qr_img.resize((250, 250), Image.LANCZOS)
+#         qr_img = ImageTk.PhotoImage(qr_img)
+
+#         qr_label = ttk.Label(qr_window, image=qr_img)
+#         qr_label.image = qr_img
+#         qr_label.pack(pady=10)
+
+#         instruction_label = ttk.Label(qr_window, text="Scan the QR code to make the payment")
+#         instruction_label.pack(pady=10)
+
+#         pay_button = ttk.Button(qr_window, text="Confirm Payment", command=lambda: self.acknowledge_payment(qr_window))
+#         pay_button.pack(pady=10)
+
+#     def acknowledge_payment(self, qr_window):
+#         qr_window.destroy()
+#         messagebox.showinfo("Payment Successful", "Thank you for your payment!")
+#         self.get_review()
+
+#         self.title("Hope you enjoyed the service! Come back again")
+#         self.bill_label.config(text="Hope you enjoyed the service! Come back again")
+
+#     def send_email(self, email, content):
+#         email_sender = 'sampagaonkar.parivita@gmail.com'
+#         email_sender_pswd = 'fnip ajnt ldnn qfdz'
+#         email_receiver = self.user_email
+
+#         subject = 'Food Reciept'
+
+#         msg = MIMEText(self.receipt_details)
+#         msg['To'] = formataddr(('Recipient', self.user_email))
+#         msg['From'] = formataddr(('Binary Resto', 'author@example.com'))
+#         msg['Subject'] = 'Reciept'
+
+#         connection = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+#         connection.ehlo()
+#         connection.login(email_sender, email_sender_pswd)
+#         connection.sendmail(msg['From'], email_receiver, msg.as_string())
+#         connection.close()
+#         print(f"Sending email to {email} with content:\n{content}")
+#         messagebox.showinfo("Email", f"Receipt sent to {email}")
