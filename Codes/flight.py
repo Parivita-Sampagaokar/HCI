@@ -202,6 +202,13 @@ def clear_frame():
 personal_details()
 root.mainloop()
 
+# from tkinter import messagebox, simpledialog
+# from PIL import Image, ImageTk
+# import qrcode
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.utils import formataddr
+
 
 # def generate_receipt(self):
 #         self.user_email = simpledialog.askstring("Enter your email: ","Enter your email: ")
